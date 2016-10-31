@@ -58,7 +58,6 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
         unsigned int userPaused:1;
         unsigned int userNeedFullScreenMode:1;
         unsigned int readyToPlay:1;
-        unsigned int animating:1;
         unsigned int recordPlaybackState:1;
         unsigned int localFiled:1;
     } _flags;
@@ -115,7 +114,6 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     _flags.userPaused = NO;
     _flags.userNeedFullScreenMode = NO;
     _flags.readyToPlay = NO;
-    _flags.animating = NO;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -628,94 +626,6 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
         [self machinePause];
     }
 }
-#pragma mark - 手机旋转通知
-- (void)deviceOrientationDidChange {
-    UIDeviceOrientation currentOrientation = [[UIDevice currentDevice] orientation];
-    UIDeviceOrientation oldOrientation = _currnetOrientation;
-    if (currentOrientation == oldOrientation) {
-        return;
-    }
-    
-    switch (currentOrientation) {
-        case UIDeviceOrientationPortrait: {
-            [self resumeToNarmalScreenDown];
-            break;
-        }
-        case UIDeviceOrientationLandscapeLeft: {
-            //手机逆时针旋转   指手机旋转的方向不是视图旋转的方向
-            [self rotationAnimationWithAnimationType:PlayerKitAnimationTypeAnticlockwise];
-            break;
-        }
-        case UIDeviceOrientationLandscapeRight: {
-            //手机顺时针旋转   指手机旋转的方向不是视图旋转的方向
-            [self rotationAnimationWithAnimationType:PlayerKitAnimationTypeClockwise];
-            break;
-        }
-        default:
-            break;
-    }
-    
-    self.currnetOrientation = currentOrientation;
-}
-
--(void)resumeToNarmalScreenDown {
-    if (_flags.animating) {
-        return;
-    }
-    self.animationType = PlayerKitAnimationTypeNone;
-    
-    [self callBackDelegateWithAnimationType:self.animationType];
-    
-    if (!_originalSuperView) {
-        _originalSuperView = [self superview];
-    }
-    [self removeFromSuperview];
-    [_originalSuperView addSubview:self];
-    
-    _flags.animating = YES;
-    [UIView animateWithDuration:0.3 animations:^{
-        self.frame = self.presentFrame;
-        [self animationPlayerView];
-    } completion:^(BOOL finished) {
-        _flags.animating = NO;
-    }];
-}
-
-- (void)rotationAnimationWithAnimationType:(PlayerKitAnimationType)animationType {
-    if (_flags.animating) {
-        return;
-    }
-    self.animationType = animationType;
-    
-    [self callBackDelegateWithAnimationType:self.animationType];
-    
-    if (!_originalSuperView) {
-        _originalSuperView = [self superview];
-    }
-    [self removeFromSuperview];
-    [[self getTopWindow] addSubview:self];
-    
-    _flags.animating = YES;
-    [UIView animateWithDuration:0.3 animations:^{
-        self.frame = [UIScreen mainScreen].bounds;
-        [self animationPlayerView];
-    } completion:^(BOOL finished) {
-        _flags.animating = NO;
-    }];
-}
--(UIWindow *)getTopWindow
-{
-    UIWindow * topWindows=[UIApplication sharedApplication].keyWindow;
-    for (UIWindow *window in  [UIApplication sharedApplication].windows) {
-        if (topWindows==nil) {
-            topWindows =window;
-        }
-        if(topWindows.windowLevel<window.windowLevel){
-            topWindows =window;
-        }
-    }
-    return topWindows;
-}
 
 //- (void)deviceOrientationDidChange {
 //    //这里有两个逻辑，第一个是水平翻转映射，第二个是90度旋转(分别顺时针和逆时针)
@@ -1004,15 +914,11 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     [notificationCenter addObserver:self selector:@selector(applicationWillResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
     [notificationCenter addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    
-    [notificationCenter addObserver:self selector:@selector(deviceOrientationDidChange) name:UIDeviceOrientationDidChangeNotification object:nil];
-    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
 }
 
 - (void)removeNotification {
     //notification
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
 }
 
 - (void)addNotificationWithPlayerItem:(AVPlayerItem *)playerItem {
@@ -1319,4 +1225,53 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     [self playerControl];
 }
 
+#pragma mark - 屏幕翻转
+- (void)rotateToLandscape:(BOOL)isPortrait size:(CGSize)size{//屏幕旋转
+    if(isPortrait==YES){//竖屏
+        [self resumeToNarmalScreenDown];
+    }else{//横屏
+        [self resumeToFullScreen:size];
+    }
+}
+-(void)resumeToNarmalScreenDown {
+    self.animationType = PlayerKitAnimationTypeNone;
+    
+    [self callBackDelegateWithAnimationType:self.animationType];
+    
+    if (!_originalSuperView) {
+        _originalSuperView = [self superview];
+    }
+    [self removeFromSuperview];
+    [_originalSuperView addSubview:self];
+    
+    self.frame = self.presentFrame;
+    [self animationPlayerView];
+}
+- (void)resumeToFullScreen:(CGSize)size {
+    self.animationType = !PlayerKitAnimationTypeNone;
+    
+    [self callBackDelegateWithAnimationType:self.animationType];
+    
+    if (!_originalSuperView) {
+        _originalSuperView = [self superview];
+    }
+    [self removeFromSuperview];
+    [[self getTopWindow] addSubview:self];
+    
+    self.frame = CGRectMake(0, 0, size.width, size.height);
+    [self animationPlayerView];
+}
+- (UIWindow *)getTopWindow
+{
+    UIWindow * topWindows=[UIApplication sharedApplication].keyWindow;
+    for (UIWindow *window in  [UIApplication sharedApplication].windows) {
+        if (topWindows==nil) {
+            topWindows =window;
+        }
+        if(topWindows.windowLevel<window.windowLevel){
+            topWindows =window;
+        }
+    }
+    return topWindows;
+}
 @end

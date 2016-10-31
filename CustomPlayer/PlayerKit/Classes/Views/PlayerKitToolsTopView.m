@@ -32,7 +32,7 @@
 }
 
 - (void)setup {
-    self.backgroundColor = [UIColor colorWithWhite:0.500 alpha:0.88];
+    self.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.88];
     
     [self addSubview:self.closeButton];
     [self addSubview:self.titleLabel];
@@ -63,7 +63,7 @@
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] init];
-        _titleLabel.text = @"测试标题";
+//        _titleLabel.text = @"测试标题";
         _titleLabel.textColor = [UIColor whiteColor];
         _titleLabel.font = [UIFont systemFontOfSize:16];
         _titleLabel.textAlignment = NSTextAlignmentLeft;

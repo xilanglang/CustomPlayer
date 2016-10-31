@@ -143,8 +143,7 @@ total media time, automatically set to half of the total time
 @property (nonatomic, assign)CGFloat volume;
 
 - (void)buildInterface;
-//- (void)prepareForReuse;
-//
-//- (void)loadMediaData;
+
+- (void)rotateToLandscape:(BOOL)isPortrait size:(CGSize)size;//屏幕旋转
 
 @end

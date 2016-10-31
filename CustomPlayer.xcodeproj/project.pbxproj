@@ -220,7 +220,6 @@
 			isa = PBXGroup;
 			children = (
 				7CBE3E5D1D9E09E3003D5C21 /* PlayerKit.h */,
-				7CBE3E5E1D9E0A7B003D5C21 /* Categorys */,
 				7CBE3E5F1D9E0A7B003D5C21 /* Protocol */,
 				7CBE3E601D9E0A7B003D5C21 /* Utility */,
 				7CBE3E611D9E0A7B003D5C21 /* Views */,
@@ -250,13 +249,6 @@
 				7CBE3E4B1D9E050B003D5C21 /* player-kit-slider_track_fill@2x.png */,
 			);
 			path = Resources;
-			sourceTree = "<group>";
-		};
-		7CBE3E5E1D9E0A7B003D5C21 /* Categorys */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Categorys;
 			sourceTree = "<group>";
 		};
 		7CBE3E5F1D9E0A7B003D5C21 /* Protocol */ = {

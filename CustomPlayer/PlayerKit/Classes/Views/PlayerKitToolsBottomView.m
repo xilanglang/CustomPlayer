@@ -32,7 +32,7 @@
 }
 
 - (void)setup {
-    self.backgroundColor = [UIColor colorWithWhite:0.500 alpha:0.8];
+    self.backgroundColor = [UIColor colorWithWhite:0.000 alpha:0.8];
     
     [self addSubview:self.mediaControlButton];
     

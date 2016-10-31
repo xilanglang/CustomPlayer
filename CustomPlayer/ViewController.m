@@ -41,11 +41,27 @@
     }
     return _playerContainer;
 }
+//屏幕翻转
+- (BOOL)shouldAutorotate{
+    return YES;
+}
 
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations{
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+}
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    //记录当前是横屏还是竖屏  yes:竖屏  no:横屏
+    BOOL isPortrait = size.width < size.height;
+    CGFloat duration = [coordinator transitionDuration];
+    
+    [UIView animateWithDuration:duration animations:^{
+        //设置topView的frame
+        [self.playerContainer rotateToLandscape:isPortrait size:size];
+    }];
+}
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 @end
