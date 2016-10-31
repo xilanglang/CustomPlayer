@@ -24,7 +24,7 @@
 }
 
 - (void)setup {
-    self.backgroundColor = [UIColor redColor];
+    self.backgroundColor = [UIColor blackColor];
     
     [self addSubview:self.reloadButton];
     [self addSubview:self.tipsLabel];

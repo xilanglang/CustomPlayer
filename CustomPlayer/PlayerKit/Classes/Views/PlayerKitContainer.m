@@ -99,7 +99,7 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     
     _readDuration = kCMTimeZero;
     _bufferDuration = kCMTimeZero;
-    _minPreloadBufferTimeToPlay = 10.0f;
+    _minPreloadBufferTimeToPlay = 5.0f;
     _volume = 1.0;
     
     _autoPlaybackToMinPreloadBufferTime = YES;
@@ -588,6 +588,7 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     if (self.playbackState == PlayerKitPlaybackStateStopped) {
         return;
     }
+    [self hideIndicator];
     [self playerPause];//是不是应该用[self playerStop]
     [self callBackDelegateWithDidChangeReadDuration:kCMTimeZero];
     [self callBackDelegateWithDidChangeBufferDuration:kCMTimeZero];
@@ -703,6 +704,12 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
 }
 
 - (void)callBackDelegateWithPlaybackDidEnd {
+    if (self.animationType != PlayerKitAnimationTypeNone) {
+        _flags.userNeedFullScreenMode = NO;
+        NSNumber *value = [NSNumber numberWithInt:UIDeviceOrientationPortrait];
+        [[UIDevice currentDevice] setValue:value forKey:@"orientation"];
+    }
+    
     if ([self.delegate respondsToSelector:@selector(playerKitContainerPlaybackDidEnd:)]) {
         [self.delegate playerKitContainerPlaybackDidEnd:self];
     }
@@ -950,6 +957,9 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
         minPreloadBufferDuration = CMTimeMake(CMTimeGetSeconds(self.totalDuration)/3.0, 1.0f);
     }
     CMTime milestone = CMTimeAdd(self.playerItem.currentTime, minPreloadBufferDuration);
+    if (CMTIME_COMPARE_INLINE(milestone, >, self.totalDuration)) {
+        milestone = self.totalDuration;
+    }
     if (CMTIME_COMPARE_INLINE(bufferDuration, >=, milestone)) {
         //如果不是用户自己手动暂停的话，缓冲达到要求，就会自动播放
         if (self.autoPlaybackToMinPreloadBufferTime && !_flags.userPaused && ![self isPlaying]) {
@@ -960,6 +970,7 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     } else {
         //缓冲达不到要求
         self.bufferingState = PlayerKitBufferingStateDelayed;
+        [self machinePause];
     }
 }
 #pragma mark - KVO
@@ -1114,26 +1125,14 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
         //隐藏声音指示器 （系统会自动隐藏）
     } else if (gestureState == PlayerKitGestureStatePlaybackSpeed) {
         //隐藏播放速度指示器
-        if (self.allowControlPlaybackSpeedForGesture) {
-            [self playCurrentTime];
-        }
     } else if (gestureState == PlayerKitGestureStateBrightness) {
         //隐藏亮度指示器
     } else if (gestureState == PlayerKitGestureStateProgress) {
         //隐藏进度指示器，更新进度条
-        // Reset
-        _gestureTimeValue = 0.0;
-        
-        if (self.allowControlMediaProgressForGesture) {
-            [self seekCurrentTimeValue:self.currentTimeValue];
-        }
-        if ([self.playerView respondsToSelector:@selector(updateControlProcessing:)]) {
-            [self.playerView updateControlProcessing:PlayerKitProcessingStateNone];
-        }
     } else {
         [super touchesEnded:touches withEvent:event];
     }
-    
+    [self handelGestureDidEnd];
     self.gestureState = PlayerKitGestureStateNone;
 }
 
@@ -1225,6 +1224,24 @@ static NSString * const ZXHPlayerContainerDurationKey = @"duration";
     [self playerControl];
 }
 
+- (void)handelGestureDidEnd {
+    if (self.gestureState == PlayerKitGestureStatePlaybackSpeed) {
+        if (self.allowControlPlaybackSpeedForGesture) {
+            [self playCurrentTime];
+        }
+    } else if (self.gestureState == PlayerKitGestureStateProgress) {
+        // Reset
+        _gestureTimeValue = 0.0;
+        
+        if (self.allowControlMediaProgressForGesture) {
+            [self seekCurrentTimeValue:self.currentTimeValue];
+        }
+    }
+    //隐藏控制进度视图
+    if ([self.playerView respondsToSelector:@selector(updateControlProcessing:)]) {
+        [self.playerView updateControlProcessing:PlayerKitProcessingStateNone];
+    }
+}
 #pragma mark - 屏幕翻转
 - (void)rotateToLandscape:(BOOL)isPortrait size:(CGSize)size{//屏幕旋转
     if(isPortrait==YES){//竖屏

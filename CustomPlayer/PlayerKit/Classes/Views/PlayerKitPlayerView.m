@@ -98,7 +98,7 @@
 
 - (void)layoutToolsTopViewWithType:(PlayerKitAnimationType)animationType {
     self.toolsTopView.hidden = (animationType == PlayerKitAnimationTypeNone);
-    self.toolsTopView.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds), 64);
+    self.toolsTopView.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds), 44);
 }
 
 - (void)layoutToolsBottomViewWithType:(PlayerKitAnimationType)animationType {

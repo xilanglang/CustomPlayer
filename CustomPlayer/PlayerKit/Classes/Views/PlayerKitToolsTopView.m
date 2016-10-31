@@ -44,7 +44,6 @@
     CGFloat size = 44;
     CGRect closeButtonFrame = self.closeButton.frame;
     closeButtonFrame.size = CGSizeMake(size, size);
-    closeButtonFrame.origin.y = 20;
     self.closeButton.frame = closeButtonFrame;
     
     CGRect titleLabelFrame = CGRectMake(CGRectGetMaxX(closeButtonFrame)+10, 20, CGRectGetMidX(self.bounds), size);
